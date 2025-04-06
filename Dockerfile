@@ -17,4 +17,4 @@ EXPOSE 8501
 # Uruchamiamy aplikację Streamlit, przekazując opcje:
 # --server.port=8501 - ustawia port,
 # --server.enableCORS=false - wyłącza mechanizm CORS, co jest często wymagane na Cloud Run
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.enableCORS=false"]
+CMD ["sh", "-c", "streamlit run app.py --server.port=${PORT:-8080} --server.enableCORS=false"]
