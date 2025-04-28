@@ -23,4 +23,4 @@ gcloud run deploy sentiment-analysis-app \
   --platform managed \
   --region europe-west1 \
   --allow-unauthenticated \
-  --memory 1Gi
+  --memory 2Gi
