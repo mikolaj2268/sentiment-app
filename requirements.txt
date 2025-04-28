@@ -13,3 +13,4 @@ scipy
 matplotlib
 nltk
 plotly
+hf_xet
