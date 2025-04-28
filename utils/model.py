@@ -1,15 +1,25 @@
+from pathlib import Path
 from functools import lru_cache
-from transformers import pipeline
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    pipeline,
+)
 
-@lru_cache(None)
+_LOCAL_DIR = Path(__file__).resolve().parent.parent / "models" / "distilbert-sst2"
+
+@lru_cache(maxsize=1)
 def get_sentiment_pipeline():
-    """
-    DistilBERT sentiment-analysis pipeline,
-    forced to run on CPU (device=-1).
-    """
+    # 1. wczytujemy z dysku – local_files_only=True działa TYLKO tutaj
+    tokenizer = AutoTokenizer.from_pretrained(_LOCAL_DIR, local_files_only=True)
+    model     = AutoModelForSequenceClassification.from_pretrained(
+        _LOCAL_DIR, local_files_only=True
+    )
+
+    # 2. budujemy pipeline bez zbędnych argumentów
     return pipeline(
         "sentiment-analysis",
-        model="distilbert/distilbert-base-uncased-finetuned-sst-2-english",
-        device=-1,               # <— add this
-        return_all_scores=False  # optional, as before
+        model=model,
+        tokenizer=tokenizer,
+        device=-1,      # CPU
     )
