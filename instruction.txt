@@ -1,3 +1,15 @@
+po pobraniu aplikacji trzeba uruchomic
+
+python - <<'PY'
+from huggingface_hub import snapshot_download
+snapshot_download(
+    "distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+    local_dir="models/distilbert-sst2",
+    local_dir_use_symlinks=False,
+    include=["pytorch_model.bin","config.json","tokenizer.json","vocab.txt"]
+)
+PY
+
 1. Zbuduj nową wersję obrazu kontenera
 
 W katalogu głównym repozytorium (tam, gdzie jest Dockerfile), wpisz:
