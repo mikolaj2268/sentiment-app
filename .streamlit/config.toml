@@ -1,0 +1,8 @@
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+
+# Hide the top-level page search bar
+[global]
+showPageModeMenu = false

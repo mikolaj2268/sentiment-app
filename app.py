@@ -1,17 +1,20 @@
 import streamlit as st
-from google.cloud import firestore
+from home_page import home_page
+from sentiment_analysis_page import sentiment_analysis_page
 
-# Show photo from photo/photo.jpg
-st.image("photo/photo.jpg")
+st.set_page_config(
+    page_title="Sentiment Explorer",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-db = firestore.Client()
-st.title("Przykładowy odczyt z Firestore")
+# ---------------- Sidebar navigation ----------------
+pages = {
+    "Home": home_page,
+    "Sentiment Dashboard": sentiment_analysis_page,
+}
 
-docs = db.collection("test_collection").limit(1).stream()
-doc = next(docs, None)
-
-if doc:
-    st.write("ID dokumentu:", doc.id)
-    st.write("Zawartość:", doc.to_dict())
-else:
-    st.write("Nie znaleziono żadnego dokumentu w test_collection")
+st.sidebar.title("Navigation")
+choice = st.sidebar.radio("Go to", list(pages.keys()))
+pages[choice]()                      # render the selected page
