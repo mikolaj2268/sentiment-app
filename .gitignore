@@ -3,3 +3,7 @@ venv/
 .venv/
 
 models/
+
+terraform.tfvars
+*.tfstate
+*.tfstate.*
