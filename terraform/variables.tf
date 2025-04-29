@@ -37,7 +37,7 @@ variable "memory" {
 variable "trigger_name" {
   description = "Name of the Cloud Build trigger"
   type        = string
-  default     = "sentiment-app-cloudbuild-trigger"
+  default     = "github-trigger"
 }
 
 variable "github_repo_owner" {

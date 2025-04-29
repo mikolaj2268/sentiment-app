@@ -188,22 +188,54 @@ resource "google_secret_manager_secret_iam_member" "allow_build_sa" {
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${local.cloudbuild_sa}"
 }
+
 /*
-resource "google_cloudbuild_trigger" "github_trigger" {
+###############################################################################
+# GitHub Connection for Cloud Build
+###############################################################################
+resource "google_cloudbuildv2_connection" "github_connection" {
   provider = google-beta
-  name        = var.trigger_name
-  project     = var.project
+  project  = var.project
+  location = "europe-west1"
+  name     = "github-connection"
+
+  github_config {
+    app_installation_id = var.github_app_installation_id  # You need to provide this
+    authorizer_credential {
+      oauth_token_secret_version = google_secret_manager_secret_version.gh_token_version.name
+    }
+  }
+}
+
+resource "google_cloudbuildv2_repository" "github_repo" {
+  provider = google-beta
+  project  = var.project
+  location = "europe-west1"
+  name     = "mikolaj2268-sentiment-app"  # Your GitHub repo name
+  parent_connection = google_cloudbuildv2_connection.github_connection.name
+  remote_uri = "https://github.com/mikolaj2268/sentiment-app.git"  # Your GitHub repo URL
+}
+
+
+# Cloud Build trigger configuration
+resource "google_cloudbuild_trigger" "github_trigger" {
+  provider   = google-beta
+  depends_on = [google_cloudbuildv2_repository.github_repo]
+  
+  name       = var.trigger_name
+  project    = var.project
   description = "Build and deploy on push to main branch"
+  location   = var.region
 
-  location    = "europe-west1"
-
+  # Update the repository event config to use the full repository path
   repository_event_config {
-    repository = "projects/sentiment-analysis-app-455917/locations/europe-west1/connections/github-connection/repositories/mikolaj2268-sentiment-app"
+    repository = google_cloudbuildv2_repository.github_repo.id
     push {
       branch = "^main$"
     }
   }
 
+  # The rest of the build configuration
   build {
     step {
       name = "gcr.io/cloud-builders/docker"
@@ -223,6 +255,7 @@ resource "google_cloudbuild_trigger" "github_trigger" {
         "--image", "${var.region}-docker.pkg.dev/${var.project}/${var.artifact_repository_name}/${var.image_name}:$SHORT_SHA",
         "--region", var.region,
         "--platform", "managed",
+        "--service-account", local.cloud_run_sa_email,
         "--quiet"
       ]
     }
@@ -230,6 +263,10 @@ resource "google_cloudbuild_trigger" "github_trigger" {
     images = [
       "${var.region}-docker.pkg.dev/${var.project}/${var.artifact_repository_name}/${var.image_name}:$SHORT_SHA"
     ]
+    timeout = "600s"
   }
 }
+
 */
+
+
