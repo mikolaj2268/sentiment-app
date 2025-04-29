@@ -1,56 +1,70 @@
-########################
-# Zmienne konfiguracyjne
-########################
 variable "project" {
-  description = "ID projektu GCP"
+  description = "Google Cloud project ID"
   type        = string
   default     = "sentiment-analysis-app-455917"
 }
 
 variable "region" {
-  description = "Region dla Cloud Run i Artifact Registry"
+  description = "Google Cloud region"
   type        = string
   default     = "europe-west1"
 }
 
 variable "artifact_repository_name" {
-  description = "Nazwa repozytorium Docker w Artifact Registry"
+  description = "Name of the Artifact Registry repository"
   type        = string
   default     = "docker-repo"
 }
 
-variable "image_name" {
-  description = "Nazwa obrazu (bez tagu)"
+variable "cloud_run_service_name" {
+  description = "Name of the Cloud Run service"
   type        = string
   default     = "sentiment-analysis-app"
 }
 
-variable "cloud_run_service_name" {
-  description = "Nazwa usługi Cloud Run"
+variable "image_name" {
+  description = "Name of the Docker image"
   type        = string
   default     = "sentiment-analysis-app"
 }
 
 variable "memory" {
-  description = "Limit pamięci dla kontenera w Cloud Run"
+  description = "Memory allocation for Cloud Run service"
   type        = string
   default     = "2Gi"
 }
 
 variable "trigger_name" {
-  description = "Nazwa Cloud Build triggera"
+  description = "Name of the Cloud Build trigger"
   type        = string
   default     = "sentiment-app-cloudbuild-trigger"
 }
 
 variable "github_repo_owner" {
-  description = "Owner (organisation / user) repozytorium GitHub"
+  description = "GitHub repository owner"
   type        = string
-  default     = "mikolaj2268"
+  default     = "mikolaj2268-sentiment-app"
 }
 
 variable "github_repo_name" {
-  description = "Nazwa repozytorium GitHub"
+  description = "GitHub repository name"
   type        = string
-  default     = "sentiment-app"
+}
+
+variable "github_token" {
+  description = "GitHub token for authentication"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_app_installation_id" {
+  description = "GitHub App installation ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "create_service_account" {
+  description = "Whether to create the service account"
+  type        = bool
+  default     = false
 }
