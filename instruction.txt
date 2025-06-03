@@ -1,3 +1,4 @@
+niepotrzebny fragment {
 po pobraniu aplikacji trzeba uruchomic
 
 python - <<'PY'
@@ -9,7 +10,7 @@ snapshot_download(
     include=["pytorch_model.bin","config.json","tokenizer.json","vocab.txt"]
 )
 PY
-
+}
 1. Zbuduj nową wersję obrazu kontenera
 
 W katalogu głównym repozytorium (tam, gdzie jest Dockerfile), wpisz:
