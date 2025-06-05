@@ -95,7 +95,7 @@ resource "google_artifact_registry_repository_iam_member" "artifact_reader" {
 # Cloud Run Service
 ###############################################################################
 resource "google_cloud_run_service" "app" {
-  provider = google-beta
+  provider   = google-beta
   depends_on = [
     google_project_service.enable_cloud_run,
     google_artifact_registry_repository.repo
@@ -107,12 +107,25 @@ resource "google_cloud_run_service" "app" {
 
   template {
     spec {
-      timeout_seconds = 300
-      service_account_name = local.cloud_run_sa_email
+      timeout_seconds       = 300
+      service_account_name  = local.cloud_run_sa_email
 
       containers {
         image = "${var.region}-docker.pkg.dev/${var.project}/${var.artifact_repository_name}/${var.image_name}:latest"
+        env {
+          name  = "GOOGLE_CLIENT_ID"
+          value = var.google_client_id
+        }
 
+        env {
+          name  = "GOOGLE_CLIENT_SECRET"
+          value = var.google_client_secret
+        }
+
+        env {
+          name  = "REDIRECT_URI"
+          value = var.redirect_uri
+        }
         resources {
           limits = { memory = var.memory }
         }
@@ -270,3 +283,58 @@ resource "google_cloudbuild_trigger" "github_trigger" {
 */
 
 
+###############################################################################
+# Oauth ahtentication
+###############################################################################
+resource "google_secret_manager_secret" "google_client_id" {
+  secret_id = "google-client-id"
+  replication { 
+    auto {} 
+    }
+}
+
+resource "google_secret_manager_secret_version" "google_client_id_version" {
+  secret      = google_secret_manager_secret.google_client_id.id
+  secret_data = var.google_client_id
+}
+
+resource "google_secret_manager_secret" "google_client_secret" {
+  secret_id = "google-client-secret"
+  replication { 
+    auto {} 
+    }
+}
+
+resource "google_secret_manager_secret_version" "google_client_secret_version" {
+  secret      = google_secret_manager_secret.google_client_secret.id
+  secret_data = var.google_client_secret
+}
+
+resource "google_secret_manager_secret_iam_member" "google_client_id_access" {
+  secret_id = google_secret_manager_secret.google_client_id.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${local.cloud_run_sa_email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "google_client_secret_access" {
+  secret_id = google_secret_manager_secret.google_client_secret.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${local.cloud_run_sa_email}"
+}
+resource "google_secret_manager_secret" "redirect_uri" {
+  secret_id = "redirect-uri"
+  replication { 
+    auto {} 
+  }
+}
+
+resource "google_secret_manager_secret_version" "redirect_uri_version" {
+  secret      = google_secret_manager_secret.redirect_uri.id
+  secret_data = var.redirect_uri
+}
+
+resource "google_secret_manager_secret_iam_member" "redirect_uri_access" {
+  secret_id = google_secret_manager_secret.redirect_uri.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${local.cloud_run_sa_email}"
+}

@@ -13,3 +13,7 @@ scipy
 matplotlib
 nltk
 plotly
+streamlit-authenticator
+python-dotenv
+requests
+authlib

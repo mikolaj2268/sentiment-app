@@ -5,6 +5,7 @@ venv/
 models/
 
 terraform.tfvars
-terraform\.terraform\providers\registry.terraform.io\hashicorp\google-beta
+terraform/.terraform/providers/registry.terraform.io/hashicorp/google-beta/6.38.0/windows_amd64
+terraform/.terraform/providers/registry.terraform.io/hashicorp/google/4.85.0/windows_amd64
 *.tfstate
 *.tfstate.*
