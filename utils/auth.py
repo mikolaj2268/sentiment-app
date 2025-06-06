@@ -28,10 +28,10 @@ def login_with_google():
             )
             st.session_state["user_id"] = id_info["sub"]
             st.session_state["user_email"] = id_info.get("email", "")
-            st.success(f"Zalogowano jako {st.session_state['user_email']} ✅")
+            st.success(f"Logged as {st.session_state['user_email']} ✅")
 
         except Exception as e:
-            st.error("Nie udało się zweryfikować tokenu logowania.")
+            st.error("Logging failed")
             st.exception(e)
 
         return
@@ -39,7 +39,7 @@ def login_with_google():
     oauth2_session = OAuth2Session(client_id, client_secret, redirect_uri=redirect_uri, scope=scope)
     uri, state = oauth2_session.create_authorization_url(authorization_endpoint)
 
-    st.markdown(f"[🔐 Kliknij tutaj, aby zalogować się przez Google]({uri})")
+    st.markdown(f"[🔐 Click here to log in with Google]({uri})")
     st.markdown(f"""
         <script>
             window.location.href = "{uri}";

@@ -27,7 +27,7 @@ def sentiment_analysis_page():
     for k in ["mode", "results_df", "text_col"]:
         ss.setdefault(k, None)
 
-    user = get_logged_user()
+    user_id = get_logged_user()[0]
 
     # 1. Mode selection if no results
     if ss.results_df is None:
@@ -74,8 +74,7 @@ def sentiment_analysis_page():
                 df_res["Confidence"] = [p["score"] for p in preds]
                 ss.results_df = df_res
 
-                if user and "sub" in user:
-                    user_id = user["sub"]
+                if user_id:
                     filename = get_clean_filename("results.csv")
                     # Zapisz do GCS
                     save_user_csv(user_id=user_id, filename=filename, df=df_res)
@@ -135,13 +134,13 @@ def sentiment_analysis_page():
         st.image(img.to_array(), use_container_width=True)
 
     # 6. User files from storage
-    if user and "sub" in user:
+    if user_id:
         st.markdown("### 📁 Your saved files")
-        files = list_user_files(user_id=user["sub"])
+        files = list_user_files(user_id=user_id)
         if files:
             selected_file = st.selectbox("Choose a file to analyze", files)
             if st.button("🔍 Analyze this file again"):
-                df_loaded = load_user_file(user["sub"], selected_file)
+                df_loaded = load_user_file(user_id, selected_file)
                 if df_loaded is not None:
                     ss.results_df = df_loaded
                     ss.mode = "upload"
