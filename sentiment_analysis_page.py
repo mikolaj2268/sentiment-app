@@ -8,7 +8,6 @@ from utils.model import get_sentiment_pipeline
 from utils.text_stats import top_ngrams
 from utils.auth import get_logged_user  # zmiana na get_logged_user z auth.py
 from utils.storage import save_user_csv, list_user_files, load_user_file
-from utils.file_utils import get_clean_filename  # jeśli masz pomocniczą funkcję czyszczącą nazwę pliku
 
 # ─── NLTK resources ─────────────────────────────────────────────────────────
 for pkg in ["punkt", "stopwords", "vader_lexicon"]:
@@ -23,13 +22,18 @@ pipe = get_sentiment_pipeline()
 def sentiment_analysis_page():
     st.header("Sentiment Dashboard")
 
+    # ----------------------------------------------------------------------
+    # 0.  Initialise session storage
+    # ----------------------------------------------------------------------
     ss = st.session_state
     for k in ["mode", "results_df", "text_col"]:
         ss.setdefault(k, None)
 
     user_id = get_logged_user()[0]
 
-    # 1. Mode selection if no results
+    # ----------------------------------------------------------------------
+    # 1.  Choose mode (demo vs upload) *only* if we haven't produced results
+    # ----------------------------------------------------------------------
     if ss.results_df is None:
         col_demo, col_upload = st.columns(2)
         if col_demo.button("► Run Demo"):
@@ -41,7 +45,9 @@ def sentiment_analysis_page():
         st.info("Click **Run Demo** or **Upload CSV** to start.")
         return
 
-    # 2. Load data
+    # ----------------------------------------------------------------------
+    # 2.  Load raw data according to mode
+    # ----------------------------------------------------------------------
     if ss.mode == "demo":
         raw = [
             "Just had an amazing cup of coffee! ☕️",
@@ -63,8 +69,10 @@ def sentiment_analysis_page():
             ss.text_col = st.selectbox("Choose the column containing text:", df_raw.columns, key="textcol_selector")
             if ss.text_col is None:
                 return
-
-    # 3. Run sentiment analysis once, store results
+            
+    # ----------------------------------------------------------------------
+    # 3.  Run DistilBERT once, store results
+    # ----------------------------------------------------------------------
     if ss.results_df is None:
         if st.button("Run sentiment analysis"):
             with st.spinner("Scoring…"):
@@ -75,14 +83,16 @@ def sentiment_analysis_page():
                 ss.results_df = df_res
 
                 if user_id:
-                    filename = get_clean_filename("results.csv")
+                    filename = up.name
                     # Zapisz do GCS
                     save_user_csv(user_id=user_id, filename=filename, df=df_res)
                     st.success(f"Results saved to folder: {user_id}")
         else:
             return
-
-    # 4. Filters
+        
+    # ----------------------------------------------------------------------
+    # 4.  Interactive filters (live; do NOT clear session data)
+    # ----------------------------------------------------------------------
     st.markdown("### Filters")
     col_f1, col_f2 = st.columns([2, 2])
 
@@ -95,7 +105,9 @@ def sentiment_analysis_page():
 
     df_view = ss.results_df[ss.results_df["Sentiment"].isin(show_sent)]
 
-    # 5. Tabs with preview, charts, and ngrams
+    # ----------------------------------------------------------------------
+    # 5.  Tabs with plots and tables
+    # ----------------------------------------------------------------------
     tab_preview, tab_dist, tab_ngrams = st.tabs(
         ["📋 Preview & Download", "📊 Distribution", "🔢 N-grams & Word-cloud"]
     )
@@ -133,7 +145,9 @@ def sentiment_analysis_page():
         img = WordCloud(width=800, height=400, background_color="white").generate(corpus)
         st.image(img.to_array(), use_container_width=True)
 
+    # ----------------------------------------------------------------------
     # 6. User files from storage
+    # ----------------------------------------------------------------------
     if user_id:
         st.markdown("### 📁 Your saved files")
         files = list_user_files(user_id=user_id)
@@ -149,7 +163,9 @@ def sentiment_analysis_page():
         else:
             st.info("You have no saved files.")
 
-    # 7. Reset button
+    # ----------------------------------------------------------------------
+    # 7.  Reset button (clears results & mode)
+    # ----------------------------------------------------------------------
     if st.button("↺ Start over"):
         for k in ["mode", "results_df", "text_col"]:
             ss[k] = None
