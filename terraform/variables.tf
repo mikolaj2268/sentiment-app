@@ -68,3 +68,8 @@ variable "create_service_account" {
   type        = bool
   default     = false
 }
+
+variable "csv_bucket_name" {
+  description = "Bucket do zapisu przesłanych plików CSV"
+  type        = string
+}

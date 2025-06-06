@@ -126,6 +126,11 @@ resource "google_cloud_run_service" "app" {
           name  = "REDIRECT_URI"
           value = var.redirect_uri
         }
+        
+        env {
+          name  = "GCS_BUCKET_NAME"
+          value = google_storage_bucket.csv_bucket.name
+        }
         resources {
           limits = { memory = var.memory }
         }
@@ -338,3 +343,28 @@ resource "google_secret_manager_secret_iam_member" "redirect_uri_access" {
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${local.cloud_run_sa_email}"
 }
+
+###############################################################################
+# Google Cloud Storage
+###############################################################################
+
+resource "google_project_service" "enable_storage" {
+  project            = var.project
+  service            = "storage.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_storage_bucket" "csv_bucket" {
+  name     = var.csv_bucket_name
+  location = var.region
+  project  = var.project
+  force_destroy = true  # pozwala usuwać bucket nawet z plikami
+}
+
+resource "google_storage_bucket_iam_member" "allow_streamlit_to_write" {
+  bucket = google_storage_bucket.csv_bucket.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${local.cloud_run_sa_email}"
+}
+
+

@@ -13,7 +13,5 @@ scipy
 matplotlib
 nltk
 plotly
-streamlit-authenticator
-python-dotenv
-requests
 authlib
+google-cloud-storage

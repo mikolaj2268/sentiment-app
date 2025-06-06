@@ -6,6 +6,9 @@ from wordcloud import WordCloud
 
 from utils.model import get_sentiment_pipeline
 from utils.text_stats import top_ngrams
+from utils.auth import get_logged_user  # zmiana na get_logged_user z auth.py
+from utils.storage import save_user_csv, list_user_files, load_user_file
+from utils.file_utils import get_clean_filename  # jeśli masz pomocniczą funkcję czyszczącą nazwę pliku
 
 # ─── NLTK resources ─────────────────────────────────────────────────────────
 for pkg in ["punkt", "stopwords", "vader_lexicon"]:
@@ -17,20 +20,16 @@ for pkg in ["punkt", "stopwords", "vader_lexicon"]:
 
 pipe = get_sentiment_pipeline()
 
-
 def sentiment_analysis_page():
     st.header("Sentiment Dashboard")
 
-    # ----------------------------------------------------------------------
-    # 0.  Initialise session storage
-    # ----------------------------------------------------------------------
     ss = st.session_state
     for k in ["mode", "results_df", "text_col"]:
         ss.setdefault(k, None)
 
-    # ----------------------------------------------------------------------
-    # 1.  Choose mode (demo vs upload) *only* if we haven't produced results
-    # ----------------------------------------------------------------------
+    user = get_logged_user()
+
+    # 1. Mode selection if no results
     if ss.results_df is None:
         col_demo, col_upload = st.columns(2)
         if col_demo.button("► Run Demo"):
@@ -42,9 +41,7 @@ def sentiment_analysis_page():
         st.info("Click **Run Demo** or **Upload CSV** to start.")
         return
 
-    # ----------------------------------------------------------------------
-    # 2.  Load raw data according to mode
-    # ----------------------------------------------------------------------
+    # 2. Load data
     if ss.mode == "demo":
         raw = [
             "Just had an amazing cup of coffee! ☕️",
@@ -62,48 +59,44 @@ def sentiment_analysis_page():
             st.info("Upload a CSV to continue.")
             return
         df_raw = pd.read_csv(up)
-        if ss.text_col is None:       # ask only once
-            ss.text_col = st.selectbox(
-                "Choose the column containing text:",
-                df_raw.columns, key="textcol_selector"
-            )
+        if ss.text_col is None:  # ask only once
+            ss.text_col = st.selectbox("Choose the column containing text:", df_raw.columns, key="textcol_selector")
             if ss.text_col is None:
                 return
 
-    # ----------------------------------------------------------------------
-    # 3.  Run DistilBERT once, store results
-    # ----------------------------------------------------------------------
+    # 3. Run sentiment analysis once, store results
     if ss.results_df is None:
         if st.button("Run sentiment analysis"):
             with st.spinner("Scoring…"):
                 preds = pipe(df_raw[ss.text_col].astype(str).tolist())
                 df_res = df_raw.copy()
-                df_res["Sentiment"]  = [p["label"].capitalize() for p in preds]
+                df_res["Sentiment"] = [p["label"].capitalize() for p in preds]
                 df_res["Confidence"] = [p["score"] for p in preds]
                 ss.results_df = df_res
+
+                if user and "sub" in user:
+                    user_id = user["sub"]
+                    filename = get_clean_filename("results.csv")
+                    # Zapisz do GCS
+                    save_user_csv(user_id=user_id, filename=filename, df=df_res)
+                    st.success(f"Results saved to folder: {user_id}")
         else:
             return
 
-    # ----------------------------------------------------------------------
-    # 4.  Interactive filters (live; do NOT clear session data)
-    # ----------------------------------------------------------------------
+    # 4. Filters
     st.markdown("### Filters")
     col_f1, col_f2 = st.columns([2, 2])
 
     with col_f1:
         sentiments = ss.results_df["Sentiment"].unique().tolist()
-        show_sent = st.multiselect(
-            "Sentiments to display", sentiments, default=sentiments, key="sent_filter"
-        )
+        show_sent = st.multiselect("Sentiments to display", sentiments, default=sentiments, key="sent_filter")
     with col_f2:
         n_val = st.selectbox("n-gram size", [1, 2, 3, 4], index=0, key="ngram_n")
         k_val = st.slider("Top-k phrases", 5, 30, 10, 5, key="ngram_k")
 
     df_view = ss.results_df[ss.results_df["Sentiment"].isin(show_sent)]
 
-    # ----------------------------------------------------------------------
-    # 5.  Tabs with plots and tables
-    # ----------------------------------------------------------------------
+    # 5. Tabs with preview, charts, and ngrams
     tab_preview, tab_dist, tab_ngrams = st.tabs(
         ["📋 Preview & Download", "📊 Distribution", "🔢 N-grams & Word-cloud"]
     )
@@ -141,10 +134,24 @@ def sentiment_analysis_page():
         img = WordCloud(width=800, height=400, background_color="white").generate(corpus)
         st.image(img.to_array(), use_container_width=True)
 
-    # ----------------------------------------------------------------------
-    # 6.  Reset button (clears results & mode)
-    # ----------------------------------------------------------------------
+    # 6. User files from storage
+    if user and "sub" in user:
+        st.markdown("### 📁 Your saved files")
+        files = list_user_files(user_id=user["sub"])
+        if files:
+            selected_file = st.selectbox("Choose a file to analyze", files)
+            if st.button("🔍 Analyze this file again"):
+                df_loaded = load_user_file(user["sub"], selected_file)
+                if df_loaded is not None:
+                    ss.results_df = df_loaded
+                    ss.mode = "upload"
+                    ss.text_col = df_loaded.columns[0]  # or store col name as metadata
+                    st.experimental_rerun()
+        else:
+            st.info("You have no saved files.")
+
+    # 7. Reset button
     if st.button("↺ Start over"):
         for k in ["mode", "results_df", "text_col"]:
             ss[k] = None
-        st.rerun()
+        st.experimental_rerun()
