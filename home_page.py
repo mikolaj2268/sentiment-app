@@ -1,4 +1,6 @@
 import streamlit as st
+from utils.auth import login_with_google, get_logged_user, logout_user
+import os
 
 def home_page():
     st.title("📊 Sentiment Explorer")
@@ -13,4 +15,16 @@ def home_page():
         """
     )
     st.markdown("---")
-    st.info("Select **Sentiment Dashboard** from the sidebar to begin.")
+
+    _, user_email = get_logged_user()
+
+
+    if user_email:
+        st.success(f"✅ Logged in as **{user_email}**")
+
+        if st.button("🔓 Log out"):
+            logout_user()
+    else:
+        st.info("You are not logged in.")
+        if st.button("🔐 Log in with Google"):
+            login_with_google()

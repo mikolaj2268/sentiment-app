@@ -13,3 +13,5 @@ scipy
 matplotlib
 nltk
 plotly
+authlib
+google-cloud-storage

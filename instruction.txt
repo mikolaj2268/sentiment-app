@@ -26,9 +26,19 @@ gcloud run deploy sentiment-analysis-app \
   --allow-unauthenticated \
   --memory 2Gi
 
+na windows:
+gcloud run deploy sentiment-analysis-app --image gcr.io/sentiment-analysis-app-455917/sentiment-analysis-app --platform managed --region europe-west1 --allow-unauthenticated --memory 2Gi
 
 terraform import google_cloud_run_service.app europe-west1/sentiment-analysis-app   
 
 terraform import google_artifact_registry_repository.repo projects/sentiment-analysis-app-455917/locations/europe-west1/repositories/docker-repo
 
 terraform import google_secret_manager_secret.gh_token projects/sentiment-analysis-app-455917/secrets/github-token 
+
+terraform import google_storage_bucket.csv_bucket "sentiment-explorer-user-files"
+
+terraform import google_secret_manager_secret.google_client_id projects/644542003635/secrets/google-client-id
+
+terraform import google_secret_manager_secret.google_client_secret projects/644542003635/secrets/google-client-secret
+
+terraform import google_secret_manager_secret.redirect_uri projects/644542003635/secrets/redirect-uri

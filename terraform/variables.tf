@@ -68,3 +68,28 @@ variable "create_service_account" {
   type        = bool
   default     = false
 }
+
+variable "csv_bucket_name" {
+  description = "Bucket do zapisu przesłanych plików CSV"
+  type        = string
+}
+variable "google_client_id" {
+  description = "OAuth Google Client ID"
+  type        = string
+}
+
+variable "google_client_secret" {
+  description = "OAuth Google Client Secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "redirect_uri" {
+  description = "Redirect URI for OAuth"
+  type        = string
+}
+
+variable "service_account_email" {
+  description = "Email of the service account to deploy Cloud Run service"
+  type        = string
+}
