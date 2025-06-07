@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import nltk
 from wordcloud import WordCloud
+import re
 
 from utils.model import get_sentiment_pipeline
 from utils.text_stats import top_ngrams
@@ -45,7 +46,7 @@ def sentiment_analysis_page():
                     ss.results_df = df_loaded
                     ss.mode = "CGS"
                     ss.text_col = df_loaded.columns[0]  # or store col name as metadata
-                    #st.rerun()
+                    st.rerun()
         else:
             st.info("You have no saved files.")
             
@@ -109,7 +110,7 @@ def sentiment_analysis_page():
                     filename = up.name
                     # Zapisz do GCS
                     save_user_csv(user_id=user_id, filename=filename, df=df_res)
-                    st.success(f"Results saved to folder: {user_id}")
+                    st.success(f"Results saved to private folder of: {user_email}")
         else:
             return
         
@@ -153,6 +154,10 @@ def sentiment_analysis_page():
         st.bar_chart(conf_hist)
 
         st.subheader("Content-length histogram")
+        # Jest to wcześniej przy wczytywaniu ale raz wrzuciłem ramke bez tego i były błędy na wszelki wypadek niech zostanie
+        df_view = df_view[df_view[ss.text_col].notna()]          # usuń NaN
+        df_view[ss.text_col] = df_view[ss.text_col].astype(str)  # zamień na string
+        df_view = df_view[df_view[ss.text_col].str.strip() != ""] # usuń puste i białe znaki   
         lengths = df_view[ss.text_col].str.len()
         len_hist = pd.cut(lengths, 10).astype(str).value_counts().sort_index()
         st.bar_chart(len_hist)
@@ -165,12 +170,15 @@ def sentiment_analysis_page():
 
         st.subheader("Word cloud")
         corpus = " ".join(df_view[ss.text_col].tolist())
+        # Wydobądź tylko słowa alfabetyczne
+        words = re.findall(r"\b\w+\b", corpus.lower())
 
-        if corpus.strip():  # jeśli corpus nie jest pusty lub samymi białymi znakami
-            img = WordCloud(width=800, height=400, background_color="white").generate(corpus)
+        if words:
+            filtered_corpus = " ".join(words)
+            img = WordCloud(width=800, height=400, background_color="white").generate(filtered_corpus)
             st.image(img.to_array(), use_container_width=True)
         else:
-            st.info("No text available to generate the word cloud.")
+            st.info("No valid words found to generate the word cloud.")
 
 
     # ----------------------------------------------------------------------
