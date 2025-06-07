@@ -332,16 +332,24 @@ resource "google_secret_manager_secret" "redirect_uri" {
     auto {} 
   }
 }
-
 resource "google_secret_manager_secret_version" "redirect_uri_version" {
   secret      = google_secret_manager_secret.redirect_uri.id
   secret_data = var.redirect_uri
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = all
+  }
 }
 
 resource "google_secret_manager_secret_iam_member" "redirect_uri_access" {
   secret_id = google_secret_manager_secret.redirect_uri.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${local.cloud_run_sa_email}"
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = all
+  }
 }
 
 ###############################################################################
@@ -358,7 +366,11 @@ resource "google_storage_bucket" "csv_bucket" {
   name     = var.csv_bucket_name
   location = var.region
   project  = var.project
-  force_destroy = true  # pozwala usuwać bucket nawet z plikami
+  force_destroy = true  # pozwala usuwać bucket nawet z plikami 
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = all
+  }
 }
 
 resource "google_storage_bucket_iam_member" "allow_streamlit_to_write" {
