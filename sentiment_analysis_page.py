@@ -170,3 +170,4 @@ def sentiment_analysis_page():
         for k in ["mode", "results_df", "text_col"]:
             ss[k] = None
         st.experimental_rerun()
+    

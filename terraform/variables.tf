@@ -89,3 +89,7 @@ variable "redirect_uri" {
   type        = string
 }
 
+variable "service_account_email" {
+  description = "Email of the service account to deploy Cloud Run service"
+  type        = string
+}
