@@ -21,7 +21,9 @@ pipe = get_sentiment_pipeline()
 
 def sentiment_analysis_page():
     st.header("Sentiment Dashboard")
-
+    user_id,user_email = get_logged_user()
+    if user_email:
+        st.markdown((f"✅ Logged in as **{user_email}**"))
     # ----------------------------------------------------------------------
     # 0.  Initialise session storage
     # ----------------------------------------------------------------------
@@ -29,8 +31,24 @@ def sentiment_analysis_page():
     for k in ["mode", "results_df", "text_col"]:
         ss.setdefault(k, None)
 
-    user_id = get_logged_user()[0]
-
+    # ----------------------------------------------------------------------
+    # 6. User files from storage
+    # ----------------------------------------------------------------------
+    if user_id:
+        st.markdown("### 📁 Your saved files")
+        files = list_user_files(user_id=user_id)
+        if files:
+            selected_file = st.selectbox("Choose a file to analyze", files)
+            if st.button("🔍 Analyze this file again"):
+                df_loaded = load_user_file(user_id, selected_file)
+                if df_loaded is not None:
+                    ss.results_df = df_loaded
+                    ss.mode = "CGS"
+                    ss.text_col = df_loaded.columns[0]  # or store col name as metadata
+                    #st.rerun()
+        else:
+            st.info("You have no saved files.")
+            
     # ----------------------------------------------------------------------
     # 1.  Choose mode (demo vs upload) *only* if we haven't produced results
     # ----------------------------------------------------------------------
@@ -48,6 +66,7 @@ def sentiment_analysis_page():
     # ----------------------------------------------------------------------
     # 2.  Load raw data according to mode
     # ----------------------------------------------------------------------
+    
     if ss.mode == "demo":
         raw = [
             "Just had an amazing cup of coffee! ☕️",
@@ -59,7 +78,7 @@ def sentiment_analysis_page():
         df_raw = pd.DataFrame({"content": raw})
         ss.text_col = "content"
         st.success("Demo mode — analysing example tweets.")
-    else:
+    elif ss.mode == "upload":
         up = st.file_uploader("Upload a CSV file", type="csv", key="uploader")
         if up is None:
             st.info("Upload a CSV to continue.")
@@ -69,7 +88,11 @@ def sentiment_analysis_page():
             ss.text_col = st.selectbox("Choose the column containing text:", df_raw.columns, key="textcol_selector")
             if ss.text_col is None:
                 return
-            
+        
+        df_raw = df_raw[df_raw[ss.text_col].notna()]          # usuń NaN
+        df_raw[ss.text_col] = df_raw[ss.text_col].astype(str)  # zamień na string
+        df_raw = df_raw[df_raw[ss.text_col].str.strip() != ""] # usuń puste i białe znaki   
+    
     # ----------------------------------------------------------------------
     # 3.  Run DistilBERT once, store results
     # ----------------------------------------------------------------------
@@ -142,26 +165,13 @@ def sentiment_analysis_page():
 
         st.subheader("Word cloud")
         corpus = " ".join(df_view[ss.text_col].tolist())
-        img = WordCloud(width=800, height=400, background_color="white").generate(corpus)
-        st.image(img.to_array(), use_container_width=True)
 
-    # ----------------------------------------------------------------------
-    # 6. User files from storage
-    # ----------------------------------------------------------------------
-    if user_id:
-        st.markdown("### 📁 Your saved files")
-        files = list_user_files(user_id=user_id)
-        if files:
-            selected_file = st.selectbox("Choose a file to analyze", files)
-            if st.button("🔍 Analyze this file again"):
-                df_loaded = load_user_file(user_id, selected_file)
-                if df_loaded is not None:
-                    ss.results_df = df_loaded
-                    ss.mode = "upload"
-                    ss.text_col = df_loaded.columns[0]  # or store col name as metadata
-                    st.experimental_rerun()
+        if corpus.strip():  # jeśli corpus nie jest pusty lub samymi białymi znakami
+            img = WordCloud(width=800, height=400, background_color="white").generate(corpus)
+            st.image(img.to_array(), use_container_width=True)
         else:
-            st.info("You have no saved files.")
+            st.info("No text available to generate the word cloud.")
+
 
     # ----------------------------------------------------------------------
     # 7.  Reset button (clears results & mode)
@@ -169,5 +179,5 @@ def sentiment_analysis_page():
     if st.button("↺ Start over"):
         for k in ["mode", "results_df", "text_col"]:
             ss[k] = None
-        st.experimental_rerun()
+        st.rerun()
     

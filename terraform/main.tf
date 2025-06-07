@@ -338,7 +338,6 @@ resource "google_secret_manager_secret_version" "redirect_uri_version" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes  = all
   }
 }
 
@@ -348,7 +347,6 @@ resource "google_secret_manager_secret_iam_member" "redirect_uri_access" {
   member    = "serviceAccount:${local.cloud_run_sa_email}"
   lifecycle {
     prevent_destroy = true
-    ignore_changes  = all
   }
 }
 
@@ -369,7 +367,6 @@ resource "google_storage_bucket" "csv_bucket" {
   force_destroy = true  # pozwala usuwać bucket nawet z plikami 
   lifecycle {
     prevent_destroy = true
-    ignore_changes  = all
   }
 }
 

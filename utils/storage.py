@@ -1,9 +1,8 @@
 from google.cloud import storage
 import pandas as pd
 import io
-
-BUCKET_NAME = "sentiment-explorer-user-files"
-
+import os
+BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
 
 def save_user_csv(user_id: str, filename: str, df: pd.DataFrame):
     client = storage.Client()
@@ -16,7 +15,13 @@ def save_user_csv(user_id: str, filename: str, df: pd.DataFrame):
 def list_user_files(user_id: str):
     client = storage.Client()
     bucket = client.bucket(BUCKET_NAME)
-    return [blob.name for blob in bucket.list_blobs(prefix=f"{user_id}/") if blob.name.endswith(".csv")]
+    prefix = f"{user_id}/"
+    blobs = bucket.list_blobs(prefix=prefix)
+    return [
+        blob.name[len(prefix):]  # usuwamy prefix "user_id/" z nazwy pliku
+        for blob in blobs
+        if blob.name.endswith(".csv")
+    ]
 
 def load_user_file(user_id: str, filename: str) -> pd.DataFrame:
     client = storage.Client()

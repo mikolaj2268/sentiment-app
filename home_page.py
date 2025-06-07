@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.auth import login_with_google, get_logged_user, logout_user
+import os
 
 def home_page():
     st.title("📊 Sentiment Explorer")
@@ -15,14 +16,14 @@ def home_page():
     )
     st.markdown("---")
 
-    user_info = get_logged_user()
+    _, user_email = get_logged_user()
 
-    if user_info:
-        st.success(f"✅ Logged in as **{user_info['email']}**")
+
+    if user_email:
+        st.success(f"✅ Logged in as **{user_email}**")
 
         if st.button("🔓 Log out"):
             logout_user()
-            st.experimental_rerun()  # Refresh page after logout
     else:
         st.info("You are not logged in.")
         if st.button("🔐 Log in with Google"):

@@ -29,6 +29,8 @@ def login_with_google():
             st.session_state["user_id"] = id_info["sub"]
             st.session_state["user_email"] = id_info.get("email", "")
             st.success(f"Logged as {st.session_state['user_email']} ✅")
+            st.query_params.clear()
+            st.rerun() 
 
         except Exception as e:
             st.error("Logging failed")
@@ -51,7 +53,11 @@ def get_logged_user():
 
 def logout_user():
     # Clear user-related data from session state
-    for key in ["user", "token"]:
-        if key in st.session_state:
-            del st.session_state[key]
+    # for key in ["user", "token"]:
+    #     if key in st.session_state:
+    #         del st.session_state[key]
+    st.session_state.clear()
+    st.query_params.clear()
+    st.rerun() 
+
 
