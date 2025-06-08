@@ -1,8 +1,12 @@
 import streamlit as st
-from utils.auth import login_with_google, get_logged_user, logout_user
+from utils.auth import login_with_google, get_logged_user, logout_user, handle_oauth_callback
 import os
 
 def home_page():
+    # Handle OAuth callback first if present
+    if handle_oauth_callback():
+        return  # Exit early if callback was processed
+    
     st.title("📊 Sentiment Explorer")
     st.markdown(
         """
@@ -18,7 +22,6 @@ def home_page():
 
     _, user_email = get_logged_user()
 
-
     if user_email:
         st.success(f"✅ Logged in as **{user_email}**")
 
@@ -26,5 +29,9 @@ def home_page():
             logout_user()
     else:
         st.info("You are not logged in.")
-        if st.button("🔐 Log in with Google"):
+        
+        # Check if we're in the middle of an OAuth flow
+        if "code" in st.query_params:
+            st.info("Processing login...")
+        elif st.button("🔐 Log in with Google"):
             login_with_google()
