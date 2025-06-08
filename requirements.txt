@@ -4,8 +4,8 @@ watchdog
 pandas>=2.2.2
 numpy
 matplotlib>=3.9.0
-transformers>=4.40.0
-torch==2.4.1
+transformers>=4.40.0,<4.45.0
+torch>=2.3.0,<2.4.0
 wordcloud
 scikit-learn
 scipy
