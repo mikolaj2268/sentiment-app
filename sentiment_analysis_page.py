@@ -68,6 +68,8 @@ def sentiment_analysis_page():
     # 2.  Load raw data according to mode
     # ----------------------------------------------------------------------
     
+    filename = "demo_results.csv"  # Default filename
+    
     if ss.mode == "demo":
         raw = [
             "Just had an amazing cup of coffee! ☕️",
@@ -84,6 +86,7 @@ def sentiment_analysis_page():
         if up is None:
             st.info("Upload a CSV to continue.")
             return
+        filename = up.name  # Use uploaded file name
         df_raw = pd.read_csv(up)
         if ss.text_col is None:  # ask only once
             ss.text_col = st.selectbox("Choose the column containing text:", df_raw.columns, key="textcol_selector")
@@ -107,7 +110,6 @@ def sentiment_analysis_page():
                 ss.results_df = df_res
 
                 if user_id:
-                    filename = up.name
                     # Zapisz do GCS
                     save_user_csv(user_id=user_id, filename=filename, df=df_res)
                     st.success(f"Results saved to private folder of: {user_email}")
