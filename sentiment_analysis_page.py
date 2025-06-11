@@ -170,17 +170,17 @@ def sentiment_analysis_page():
         st.dataframe(ng_df, use_container_width=True)
         st.bar_chart(ng_df.set_index("ngram")["count"])
 
-        st.subheader("Word cloud")
-        corpus = " ".join(df_view[ss.text_col].tolist())
-        # Wydobądź tylko słowa alfabetyczne
-        words = re.findall(r"\b\w+\b", corpus.lower())
+        # st.subheader("Word cloud")
+        # corpus = " ".join(df_view[ss.text_col].tolist())
+        # # Wydobądź tylko słowa alfabetyczne
+        # words = re.findall(r"\b\w+\b", corpus.lower())
 
-        if words:
-            filtered_corpus = " ".join(words)
-            img = WordCloud(width=800, height=400, background_color="white").generate(filtered_corpus)
-            st.image(img.to_array(), use_container_width=True)
-        else:
-            st.info("No valid words found to generate the word cloud.")
+        # if words:
+        #     filtered_corpus = " ".join(words)
+        #     img = WordCloud(width=800, height=400, background_color="white").generate(filtered_corpus)
+        #     st.image(img.to_array(), use_container_width=True)
+        # else:
+        #     st.info("No valid words found to generate the word cloud.")
 
 
     # ----------------------------------------------------------------------
